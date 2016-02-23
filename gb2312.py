@@ -130,7 +130,7 @@ if __name__ == '__main__':
     if args.output_table:
         char_set = gb2312.get_sections(range(1, 94 + 1))
         from asciitable import AsciiTable
-        a = AsciiTable(char_set, header=False)
+        a = AsciiTable(char_set, header=False, encoding='gbk')
         print(a.table().encode('utf-8'))
     if args.sp_search:
         chars = args.sp_search.decode('utf-8')
