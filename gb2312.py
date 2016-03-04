@@ -28,7 +28,7 @@ class GB2312(object):
                 # bytes
                 b_code = struct.pack('>1H', gb_code)
                 # unicode
-                ch = b_code.decode('gbk', errors='ignore')
+                ch = b_code.decode('gb2312', errors='ignore')
                 if not ch and errors:
                     ch = errors
                 self.charset[gb_code] = ch
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     if args.output_table:
         char_set = gb2312.get_sections(range(1, 94 + 1))
         from asciitable import AsciiTable
-        a = AsciiTable(char_set, header=False, encoding='gbk')
+        a = AsciiTable(char_set, header=False, encoding='gb2312')
         print(a.table().encode(args.encoding))
     if args.sp_search:
         chars = args.sp_search.decode('utf-8')
