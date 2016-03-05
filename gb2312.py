@@ -14,6 +14,8 @@ class GB2312(object):
         u'10-15区及88-94区则未有编码',
     ]
     wiki = 'https://zh.wikipedia.org/wiki/GB_2312'
+    sec_desc = u'区'
+    pos_desc = u'位'
 
     def __init__(self, errors=None):
         self.charset = {}
@@ -37,16 +39,18 @@ class GB2312(object):
         return '<%s>' % self.title
 
     def get_sections(self, sections=None):
-        if not isinstance(sections, list):
+        if sections is None:
             sections = range(1, 94 + 1)
+        elif not isinstance(sections, list):
+            sections = [sections]
         char_set = []
         nPos = 94
         for sec in sections:
             sec_set = []
             for x in range(nPos):
                 pos = x + 1
-                i_code = (sec + 0xa0) << 8 | (pos + 0xa0)
-                sec_set.append(self.charset[i_code])
+                gb_code = (sec + 0xa0) << 8 | (pos + 0xa0)
+                sec_set.append(self.charset[gb_code])
             char_set.append(sec_set)
         return char_set
 
@@ -74,10 +78,11 @@ class GB2312(object):
         lines.append(self.description)
         lines += self.detail
         lines.append(self.wiki)
-        lines.append(' ' * 3 + ' '.join(['%02d' % (x + 1) for x in range(94)]))
+        lines.append(' ' * 6 + ' '.join(['%02X' % (0xa0 + x + 1) for x in range(94)]))
+        lines.append(' ' * 6 + ' '.join(['%02d' % (x + 1) for x in range(94)]))
         for sec_set in char_set:
             count += 1
-            lines.append('%02d ' % count + ' '.join(
+            lines.append('%02X %02d ' % (0xa0 + count, count) + ' '.join(
                 [ch if ch else err_ch for ch in sec_set]
             ))
         return '\n'.join(lines)
@@ -103,18 +108,23 @@ class GB2312(object):
         html.append('<hr />')
         html.append('<p>%s</p>' % self.description)
         html.append('<ol>')
-        html += ['<li>%s<li>' % item for item in self.detail]
+        html += ['<li>%s</li>' % item for item in self.detail]
         html.append('</ol>')
-        html.append('<p>%s</p>' % self.wiki)
-        html.append('<ul>')
-        html.append('<li>s: section</li>')
-        html.append('<li>p: position</li>')
-        html.append('</ul>')
+        html.append('<p>wiki: %s</p>' % self.wiki)
         html.append('<p><code>code = (0xA0 + sec) << 8 + (0xA0 + pos)</code></p>')
+        html.append('<ul>')
+        html.append('<li>sec: %s</li>' % self.sec_desc)
+        html.append('<li>pos: %s</li>' % self.pos_desc)
+        html.append('</ul>')
         html.append('<table>')
         html.append(
             '<tr>' +
-            '<td>s\p</td>' +
+            '<td colspan="2" rowspan="2">%s\%s</td>' % (self.sec_desc, self.pos_desc) +
+            ''.join(['<td>%02X</td>' % (0xA0 + x + 1) for x in range(94)]) +
+            '</tr>'
+        )
+        html.append(
+            '<tr>' +
             ''.join(['<td>%02d</td>' % (x + 1) for x in range(94)]) +
             '</tr>'
         )
@@ -123,7 +133,7 @@ class GB2312(object):
             count += 1
             html.append(
                 '<tr>' +
-                '<td>%02d</td>' % count +
+                '<td>%02X</td>' % (0xA0 + count) + '<td>%02d</td>' % count +
                 ''.join(['<td>%s</td>' % ch if ch else '<td>%s</td>' % err_ch for ch in sec_set]) +
                 '</tr>'
             )
@@ -139,8 +149,8 @@ if __name__ == '__main__':
     parser.add_argument('--encoding', default='utf-8', help='output encoding. default: utf-8')
     parser.add_argument('--output-html', action='store_true', help='output html table')
     parser.add_argument('--output-txt', action='store_true', help='output txt table')
-    parser.add_argument('--output-table', action='store_true', help='output ascii table')
-    parser.add_argument('--sp-search', help='section and position for gb2312 character')
+    parser.add_argument('--output-rst', action='store_true', help='output rst table')
+    parser.add_argument('--sp', help='output section and position for gb2312 character')
     args = parser.parse_args()
 
     gb2312 = GB2312()
@@ -151,12 +161,28 @@ if __name__ == '__main__':
     if args.output_html:
         html = gb2312.as_html()
         print(html.encode(args.encoding))
-    if args.output_table:
-        char_set = gb2312.get_sections(range(1, 94 + 1))
-        from asciitable import AsciiTable
-        a = AsciiTable(char_set, header=False, encoding='gb2312')
+    if args.output_rst:
+        lines = []
+        lines.append(gb2312.title)
+        lines.append('=' * len(gb2312.title))
+        lines.append(gb2312.description)
+        lines.append('')
+        lines += ['* %s' % detail for detail in gb2312.detail]
+        lines.append('')
+        lines.append('wiki: %s' % gb2312.wiki)
+        lines.append('')
+        data = gb2312.get_sections(range(1, 94 + 1))
+        for idx in range(len(data)):
+            data[idx].insert(0, '%02X' % (0xa0 + idx + 1))
+            data[idx].insert(1, '%02d ' % (idx + 1))
+        data.insert(0, ['', ''] + ['%02X' % (0xa0 + x + 1) for x in range(94)])
+        data.insert(1, ['', ''] + ['%02d' % (x + 1) for x in range(94)])
+
+        from rsttable import RstTable
+        a = RstTable(data, header=False, encoding='gb2312')
+        print('\n'.join(lines).encode(args.encoding))
         print(a.table().encode(args.encoding))
-    if args.sp_search:
-        chars = args.sp_search.decode('utf-8')
+    if args.sp:
+        chars = args.sp.decode(args.encoding)
         print('GB2312 section and position:')
         print(gb2312.sp_search(chars))
