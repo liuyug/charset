@@ -130,6 +130,7 @@ class GBK(object):
         html.append('<li>wiki: <a href="%s" target="_blank">%s</a></li>' % (self.wiki, self.wiki))
         html.append('</ul>')
         html.append('<h2>Code Table</h2>')
+        html.append(u'<p>不包含单字节编码 00-7F ，即 ASCII 范围。</p>')
         html.append('<p>')
         html.append('<span class="gbk1">GBK1</span>')
         html.append('<span class="gbk2">GBK2</span>')
