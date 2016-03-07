@@ -167,7 +167,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--encoding', default='utf-8', help='output encoding. default: utf-8')
     parser.add_argument('--output-html', action='store_true', help='output html table')
-    parser.add_argument('--sp-search', help='section and position for gb2312 character')
+    parser.add_argument('--sp-search', help='section and position for GBK character')
     args = parser.parse_args()
 
     gbk = GBK()

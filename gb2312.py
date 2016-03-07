@@ -191,7 +191,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-html', action='store_true', help='output html table')
     parser.add_argument('--output-txt', action='store_true', help='output txt table')
     parser.add_argument('--output-rst', action='store_true', help='output rst table')
-    parser.add_argument('--sp', help='output section and position for gb2312 character')
+    parser.add_argument('--sp', help='output section and position for GB2312 character')
     args = parser.parse_args()
 
     gb2312 = GB2312()
