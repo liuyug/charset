@@ -81,8 +81,7 @@ class GBK(object):
             if v[0] <= f <= v[1] and v[2] <= s <= v[3]:
                 return k
 
-    def sp_search(self, chars):
-        """section and postion"""
+    def codes(self, chars):
         inverse_charset = dict(zip(self.charset.values(), self.charset.keys()))
         codes = []
         for ch in chars:
@@ -164,17 +163,19 @@ class GBK(object):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Output GBK code table to HTML.')
     parser.add_argument('--encoding', default='utf-8', help='output encoding. default: utf-8')
     parser.add_argument('--output-html', action='store_true', help='output html table')
-    parser.add_argument('--sp-search', help='section and position for GBK character')
+    parser.add_argument('--code', help='code for GBK character')
     args = parser.parse_args()
 
     gbk = GBK()
     if args.output_html:
         html = gbk.as_html()
         print(html.encode(args.encoding))
-    if args.sp_search:
-        chars = args.sp_search.decode('utf-8')
+    elif args.code:
+        chars = args.code.decode('utf-8')
         print('GBK section and position:')
-        print(gbk.sp_search(chars))
+        print(gbk.codes(chars))
+    else:
+        parser.print_help()

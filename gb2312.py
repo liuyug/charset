@@ -61,7 +61,7 @@ class GB2312(object):
             if v[0] <= sec <= v[1]:
                 return k
 
-    def sp_search(self, chars):
+    def sp_code(self, chars):
         """section and postion"""
         inverse_charset = dict(zip(self.charset.values(), self.charset.keys()))
         codes = []
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-html', action='store_true', help='output html table')
     parser.add_argument('--output-txt', action='store_true', help='output txt table')
     parser.add_argument('--output-rst', action='store_true', help='output rst table')
-    parser.add_argument('--sp', help='output section and position for GB2312 character')
+    parser.add_argument('--sp-code', help='output section and position for GB2312 character')
     args = parser.parse_args()
 
     gb2312 = GB2312()
@@ -199,13 +199,15 @@ if __name__ == '__main__':
         text = gb2312.as_txt(errors=u'　')
         # output str
         print(text.encode(args.encoding))
-    if args.output_html:
+    elif args.output_html:
         html = gb2312.as_html()
         print(html.encode(args.encoding))
-    if args.output_rst:
+    elif args.output_rst:
         rst = gb2312.as_rst()
         print(rst.encode(args.encoding))
-    if args.sp:
-        chars = args.sp.decode(args.encoding)
+    elif args.sp_code:
+        chars = args.sp_code.decode(args.encoding)
         print('GB2312 section and position:')
-        print(gb2312.sp_search(chars))
+        print(gb2312.sp_code(chars))
+    else:
+        parser.print_help()
