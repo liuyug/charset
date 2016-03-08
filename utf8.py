@@ -37,13 +37,23 @@ class UTF8(object):
     def __repr__(self):
         return '<%s>' % self.title
 
+    def chars(self, codes):
+        chars = []
+        for code in codes:
+            u_code = int(code, 16)
+            b_code = struct.pack('>L', u_code)
+            ch = b_code.decode('utf-16-be')
+            chars.append(ch)
+        return chars
+
     def codes(self, chars):
-        """section and postion"""
         codes = []
+        ucodes = []
         for ch in chars:
-            ch = ch.encode(self.encoding)
-            codes.append(ch)
-        return codes
+            code = ch.encode(self.encoding)
+            codes.append(code)
+            ucodes.append(ch)
+        return codes, ucodes
 
     def as_html(self, zone=None, errors=None):
         if zone is None:
@@ -170,14 +180,20 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Output UTF-8 code table to HTML.')
     parser.add_argument('--zone', help='UTF-8 encoding zone: two, three, four')
-    parser.add_argument('--code', help='code for UTF-8 character')
+    parser.add_argument('--codes', help='Input char and return UTF-8 code and Unicode (UTF-16-BE)')
+    parser.add_argument('--chars', help='Input Unicode code and return char')
     args = parser.parse_args()
 
     utf8 = UTF8()
-    if args.code:
-        chars = args.code.decode('utf-8')
+    if args.codes:
+        chars = args.codes.decode('utf-8')
+        code = utf8.codes(chars)
         print('UTF-8 code:')
-        print(utf8.codes(chars))
+        print(code[0])
+        print('Unicode code:')
+        print(code[1])
+    elif args.chars:
+        print(''.join(utf8.chars(args.chars.split(','))))
     elif args.zone:
         html = utf8.as_html(zone=args.zone)
         print(html.encode('utf-8'))

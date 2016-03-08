@@ -41,6 +41,7 @@ class GB2312(object):
             sec = x + 1
             for y in range(nPos):
                 pos = y + 1
+                sp_code = sec << 8 | pos
                 # int
                 gb_code = (sec + self.offset) << 8 | (pos + self.offset)
                 # bytes
@@ -49,26 +50,37 @@ class GB2312(object):
                 ch = b_code.decode(self.encoding, errors='ignore')
                 if not ch and errors:
                     ch = errors
-                self.charset[gb_code] = ch
+                self.charset[sp_code] = ch
 
     def __repr__(self):
         return '<%s>' % self.title
 
     @classmethod
     def get_area_name(cls, code):
-        sec = (code >> 8) - cls.offset
+        sec = code >> 8
         for k, v in cls.define.items():
             if v[0] <= sec <= v[1]:
                 return k
 
+    def chars(self, codes):
+        """ get characters """
+        chars = []
+        for code in codes:
+            sec = int(code[:2])
+            pos = int(code[2:])
+            sp_code = sec << 8 | pos
+            ch = self.charset.get(sp_code)
+            chars.append(ch)
+        return chars
+
     def sp_code(self, chars):
-        """section and postion"""
+        """ get sp code """
         inverse_charset = dict(zip(self.charset.values(), self.charset.keys()))
         codes = []
         for ch in chars:
             code = inverse_charset.get(ch)
-            sec = (code >> 8) - self.offset
-            pos = (code & 0xff) - self.offset
+            sec = code >> 8
+            pos = code & 0xff
             codes.append('%s%s' % (sec, pos))
         return codes
 
@@ -90,7 +102,7 @@ class GB2312(object):
             row.append('%02d' % sec)
             for y in range(94):
                 pos = y + 1
-                code = (sec + self.offset) << 8 | (pos + self.offset)
+                code = sec << 8 | pos
                 row.append('%s' % (self.charset.get(code, err_ch)))
             lines.append(' '.join(row))
         return '\n'.join(lines)
@@ -150,7 +162,7 @@ class GB2312(object):
             row.append('<td>%02X</td>' % (sec + self.offset))
             row.append('<td>%02d</td>' % sec)
             for pos in range(1, 94 + 1):
-                code = (sec + self.offset) << 8 | (pos + self.offset)
+                code = sec << 8 | pos
                 name = self.get_area_name(code)
                 row.append('<td class="%s">%s</td>' % (name, self.charset.get(code, err_ch)))
             html.append('<tr>' + ''.join(row) + '</tr>')
@@ -192,6 +204,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-txt', action='store_true', help='output txt table')
     parser.add_argument('--output-rst', action='store_true', help='output rst table')
     parser.add_argument('--sp-code', help='output section and position for GB2312 character')
+    parser.add_argument('--char', help='output GB2312 character for section and position code')
     args = parser.parse_args()
 
     gb2312 = GB2312()
@@ -209,5 +222,14 @@ if __name__ == '__main__':
         chars = args.sp_code.decode(args.encoding)
         print('GB2312 section and position:')
         print(gb2312.sp_code(chars))
+    elif args.char:
+        if '-' in args.char:
+            codes = args.char.split('-')
+        elif ',' in args.char:
+            codes = args.char.split(',')
+        else:
+            codes = [args.char[x * 4:(x + 1) * 4] for x in range(len(args.char) / 4)]
+        print('GB2312 characters:')
+        print(''.join(gb2312.chars(codes)).encode(args.encoding))
     else:
         parser.print_help()
