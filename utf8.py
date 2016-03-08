@@ -40,20 +40,19 @@ class UTF8(object):
     def chars(self, codes):
         chars = []
         for code in codes:
-            u_code = int(code, 16)
-            b_code = struct.pack('>L', u_code)
-            ch = b_code.decode('utf-16-be')
+            b_code = struct.pack('>L', int(code, 16))
+            ch = b_code.decode(self.encoding)
             chars.append(ch)
         return chars
 
     def codes(self, chars):
         codes = []
-        ucodes = []
         for ch in chars:
-            code = ch.encode(self.encoding)
+            b_code = ch.encode(self.encoding)
+            fmt = '>%sB' % len(b_code)
+            code = ''.join(['%02X' % x for x in struct.unpack(fmt, b_code)])
             codes.append(code)
-            ucodes.append(ch)
-        return codes, ucodes
+        return codes
 
     def as_html(self, zone=None, errors=None):
         if zone is None:
@@ -180,20 +179,22 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Output UTF-8 code table to HTML.')
     parser.add_argument('--zone', help='UTF-8 encoding zone: two, three, four')
-    parser.add_argument('--codes', help='Input char and return UTF-8 code and Unicode (UTF-16-BE)')
-    parser.add_argument('--chars', help='Input Unicode code and return char')
+    parser.add_argument('--code', dest='char', help='output UTF-8 code for character')
+    parser.add_argument('--char', dest='code', help='output character for UTF-8 code')
     args = parser.parse_args()
 
     utf8 = UTF8()
-    if args.codes:
-        chars = args.codes.decode('utf-8')
+    if args.char:
+        chars = args.char.decode('utf-8')
         code = utf8.codes(chars)
         print('UTF-8 code:')
-        print(code[0])
-        print('Unicode code:')
-        print(code[1])
-    elif args.chars:
-        print(''.join(utf8.chars(args.chars.split(','))))
+        print(code)
+    elif args.code:
+        if '-' in args.code:
+            codes = args.code.split('-')
+        elif ',' in args.code:
+            codes = args.code.split(',')
+        print(''.join(utf8.chars(codes)))
     elif args.zone:
         html = utf8.as_html(zone=args.zone)
         print(html.encode('utf-8'))

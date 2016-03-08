@@ -174,8 +174,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Output GBK code table to HTML.')
     parser.add_argument('--encoding', default='utf-8', help='output encoding. default: utf-8')
     parser.add_argument('--output-html', action='store_true', help='output html table')
-    parser.add_argument('--char', dest='code', help='output GBK character for GBK code')
-    parser.add_argument('--code', dest='char', help='output code for GBK character')
+    parser.add_argument('--char', dest='code', help='output character for GBK code')
+    parser.add_argument('--code', dest='char', help='output GBK code for character')
     args = parser.parse_args()
 
     gbk = GBK()
