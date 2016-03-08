@@ -81,6 +81,14 @@ class GBK(object):
             if v[0] <= f <= v[1] and v[2] <= s <= v[3]:
                 return k
 
+    def chars(self, codes):
+        chars = []
+        for code in codes:
+            gbk_code = int(code, 16)
+            ch = self.charset.get(gbk_code)
+            chars.append(ch)
+        return chars
+
     def codes(self, chars):
         inverse_charset = dict(zip(self.charset.values(), self.charset.keys()))
         codes = []
@@ -166,16 +174,26 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Output GBK code table to HTML.')
     parser.add_argument('--encoding', default='utf-8', help='output encoding. default: utf-8')
     parser.add_argument('--output-html', action='store_true', help='output html table')
-    parser.add_argument('--code', help='code for GBK character')
+    parser.add_argument('--char', dest='code', help='output GBK character for GBK code')
+    parser.add_argument('--code', dest='char', help='output code for GBK character')
     args = parser.parse_args()
 
     gbk = GBK()
     if args.output_html:
         html = gbk.as_html()
         print(html.encode(args.encoding))
-    elif args.code:
-        chars = args.code.decode('utf-8')
-        print('GBK section and position:')
+    elif args.char:
+        chars = args.char.decode('utf-8')
+        print('GBK code:')
         print(gbk.codes(chars))
+    elif args.code:
+        if '-' in args.code:
+            codes = args.code.split('-')
+        elif ',' in args.code:
+            codes = args.code.split(',')
+        else:
+            codes = [args.code[x * 4:(x + 1) * 4] for x in range(len(args.code) / 4)]
+        print('GBK char:')
+        print(''.join(gbk.chars(codes)))
     else:
         parser.print_help()

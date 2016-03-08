@@ -203,8 +203,8 @@ if __name__ == '__main__':
     parser.add_argument('--output-html', action='store_true', help='output html table')
     parser.add_argument('--output-txt', action='store_true', help='output txt table')
     parser.add_argument('--output-rst', action='store_true', help='output rst table')
-    parser.add_argument('--sp-code', help='output section and position for GB2312 character')
-    parser.add_argument('--char', help='output GB2312 character for section and position code')
+    parser.add_argument('--code', dest='char', help='output section and position for GB2312 character')
+    parser.add_argument('--char', dest='code', help='output GB2312 character for section and position code')
     args = parser.parse_args()
 
     gb2312 = GB2312()
@@ -218,17 +218,17 @@ if __name__ == '__main__':
     elif args.output_rst:
         rst = gb2312.as_rst()
         print(rst.encode(args.encoding))
-    elif args.sp_code:
-        chars = args.sp_code.decode(args.encoding)
+    elif args.char:
+        chars = args.char.decode(args.encoding)
         print('GB2312 section and position:')
         print(gb2312.sp_code(chars))
-    elif args.char:
-        if '-' in args.char:
-            codes = args.char.split('-')
-        elif ',' in args.char:
-            codes = args.char.split(',')
+    elif args.code:
+        if '-' in args.code:
+            codes = args.code.split('-')
+        elif ',' in args.code:
+            codes = args.code.split(',')
         else:
-            codes = [args.char[x * 4:(x + 1) * 4] for x in range(len(args.char) / 4)]
+            codes = [args.code[x * 4:(x + 1) * 4] for x in range(len(args.code) / 4)]
         print('GB2312 characters:')
         print(''.join(gb2312.chars(codes)).encode(args.encoding))
     else:
