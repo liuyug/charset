@@ -55,12 +55,12 @@ class GBK(CharsetBase):
             {
                 'name': 'gbk1',
                 'range': ((0xa1, 0xa9, 0xa1, 0xfe),),
-                'desc': 'GBK 1',
+                'desc': 'GBK 1 (GB2312 Symboal)',
             },
             {
                 'name': 'gbk2',
                 'range': ((0xb0, 0xf7, 0xa1, 0xfe),),
-                'desc': 'GBK 2',
+                'desc': 'GBK 2 (GB2312 Level1, Level2)',
             },
             {
                 'name': 'gbk3',
@@ -80,12 +80,12 @@ class GBK(CharsetBase):
             {
                 'name': 'user1',
                 'range': ((0xaa, 0xaf, 0xa1, 0xfe),),
-                'desc': 'User 1',
+                'desc': 'User 1 (GB2312 User 1)',
             },
             {
                 'name': 'user2',
                 'range': ((0xf8, 0xfe, 0xa1, 0xfe),),
-                'desc': 'User 2',
+                'desc': 'User 2 (GB2312 User 2)',
             },
             {
                 'name': 'user3',

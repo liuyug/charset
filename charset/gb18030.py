@@ -50,22 +50,22 @@ class GB18030(CharsetBase):
         ],
         'panel1': [
             {
-                'name': 'cjk',
+                'name': 'gbk',
                 'range': (
                     (0x00, 0x00, 0x00, 0x00, 0x81, 0xfe, 0x40, 0x7e),
                     (0x00, 0x00, 0x00, 0x00, 0x81, 0xfe, 0x80, 0xfe),
                 ),
-                'desc': 'CJK',
+                'desc': 'GBK',
             },
         ],
         'panel2': [
             {
-                'name': 'CJK_A',
+                'name': 'cjk_a',
                 'range': ((0x81, 0x82, 0x30, 0x39, 0x81, 0xfe, 0x30, 0x39),),
                 'desc': 'CJK A',
             },
             {
-                'name': 'CJK_B',
+                'name': 'cjk_b',
                 'range': ((0x95, 0x98, 0x30, 0x39, 0x81, 0xfe, 0x30, 0x39),),
                 'desc': 'CJK A',
             },

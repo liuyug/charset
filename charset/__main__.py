@@ -5,7 +5,7 @@ import sys
 import argparse
 from collections import OrderedDict
 
-from charset import Unicode, UTF8, GB18030, GBK, GB2312
+from charset import version, Unicode, UTF8, GB18030, GBK, GB2312
 
 
 CHARSET_CLASS = OrderedDict((
@@ -19,7 +19,7 @@ CHARSET_CLASS = OrderedDict((
 
 def main():
     parser = argparse.ArgumentParser(
-        description='CHARSET Tool for %s' % ','.join(CHARSET_CLASS.keys()),
+        description='CHARSET v%s' % version,
         epilog='System encoding: %s' % sys.getfilesystemencoding(),
     )
     parser.add_argument(
