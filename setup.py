@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding:utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup
 
 from charset import version
 
@@ -17,5 +17,10 @@ setup(
     packages=[
         'charset',
     ],
-    scripts=['charset.py', 'ascii.py']
+    entry_points={
+        'console_scripts': [
+            'charset = charset.__main__:main',
+            'ascii = ascii:txt',
+        ],
+    }
 )
