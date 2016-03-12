@@ -3,12 +3,16 @@
 
 import struct
 
+from .base import CharsetBase
 
-class UTF8(object):
+
+class UTF8(CharsetBase):
     title = 'CODE TABLE OF UTF-8'
-    description = u"UTF-8（8-bit Unicode Transformation Format）是一种针对Unicode的可变长度字符编码，也是一种前缀码。它可以用来表示Unicode标准中的任何字符，且其编码中的第一个字节仍与ASCII兼容，这使得原来处理ASCII字符的软件无须或只须做少部分修改，即可继续使用。因此，它逐渐成为电子邮件、网页及其他存储或发送文字的应用中，优先采用的编码。"
-    detail = [
+    description = [
+        u"UTF-8（8-bit Unicode Transformation Format）是一种针对Unicode的可变长度字符编码，也是一种前缀码。它可以用来表示Unicode标准中的任何字符，且其编码中的第一个字节仍与ASCII兼容，这使得原来处理ASCII字符的软件无须或只须做少部分修改，即可继续使用。因此，它逐渐成为电子邮件、网页及其他存储或发送文字的应用中，优先采用的编码。",
         u'UTF-8使用一至六个字节为每个字符编码（尽管如此，2003年11月UTF-8被RFC 3629重新规范，只能使用原来Unicode定义的区域，U+0000到U+10FFFF，也就是说最多四个字节）',
+    ]
+    detail = [
         u'128个US-ASCII字符只需一个字节编码（Unicode范围由U+0000至U+007F）。ASCII字符范围，字节由零开始，0zzzzzzz（00-7F）',
         u'带有附加符号的拉丁文、希腊文、西里尔字母、亚美尼亚语、希伯来文、阿拉伯文、叙利亚文及它拿字母则需要两个字节编码（Unicode范围由U+0080至U+07FF）。第一个字节由110开始，接着的字节由10开始，110yyyyy（C0-DF) 10zzzzzz(80-BF）',
         u'其他基本多文种平面（BMP）中的字符（这包含了大部分常用字，如大部分的汉字）使用三个字节编码（Unicode范围由U+0800至U+FFFF）。第一个字节由1110开始，接着的字节由10开始，1110xxxx(E0-EF) 10yyyyyy 10zzzzzz',
@@ -25,82 +29,99 @@ class UTF8(object):
 
     encoding = 'utf-8'
     define = {
-        'one': (0x00, 0x7f),
-        'two': (0xc0, 0xdf, 0x80, 0xbf),
-        'three': (0xe0, 0xef, 0x80, 0xbf, 0x80, 0xbf),
-        'four': (0xf0, 0xf7, 0x80, 0xbf, 0x80, 0xbf, 0x80, 0xbf),
+        'panel0': {
+            'desc': ['One Bytes'],
+            'range': (0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f),
+        },
+        'panel1': {
+            'desc': ['Two Bytes'],
+            'range': (0x00, 0x00, 0x00, 0x00, 0xc0, 0xdf, 0x80, 0xbf),
+        },
+        'panel2': {
+            'desc': ['Three Bytes'],
+            'range': (0x00, 0x00, 0xe0, 0xef, 0x80, 0xbf, 0x80, 0xbf),
+        },
+        'panel3': {
+            'desc': ['Four Bytes'],
+            'range': (0xf0, 0xf7, 0x80, 0xbf, 0x80, 0xbf, 0x80, 0xbf),
+        },
+    }
+    category = {
+        'panel0': [
+            {
+                'name': 'Control',
+                'range': ((0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f),),
+                'desc': 'Control',
+            },
+            {
+                'name': 'Text',
+                'range': ((0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x7f),),
+                'desc': 'Text',
+            },
+        ],
     }
 
     def __init__(self, errors=None):
-        pass
+        super(UTF8, self).__init__(errors=errors)
 
-    def __repr__(self):
-        return '<%s>' % self.title
+    def get_category(self, b_code):
+        code, = struct.unpack('>L', b_code)
+        f = code >> 24 & 0xff
+        s = code >> 16 & 0xff
+        t = code >> 8 & 0xff
+        fo = code & 0xff
+        for k, v in self.category.items():
+            for vv in v:
+                for f1, f2, s1, s2, t1, t2, fo1, fo2 in vv['range']:
+                    if f1 <= f <= f2 and s1 <= s <= s2 and t1 <= t <= t2 and fo1 <= fo <= fo2:
+                        return vv['name']
+        return None
 
-    def chars(self, codes):
-        chars = []
-        for code in codes:
-            b_code = struct.pack('>L', int(code, 16))
-            ch = b_code.decode(self.encoding)
-            chars.append(ch)
-        return chars
+    def do_panel_as_html(self, define, err_ch):
+        f1, f2, s1, s2, t1, t2, fo1, fo2 = define['range']
+        if f1 == f2 == s1 == s2 == t1 == t2 == 0x0:
+            return self.panel_as_html_1B(define, err_ch)
+        elif f1 == f2 == s1 == s2 == 0x0:
+            return self.panel_as_html_2B(define, err_ch)
+        elif f1 == f2 == 0x0:
+            return self.panel_as_html_3B(define, err_ch)
+        else:
+            return self.panel_as_html_4B(define, err_ch)
+        return []
 
-    def codes(self, chars):
-        codes = []
-        for ch in chars:
-            b_code = ch.encode(self.encoding)
-            fmt = '>%sB' % len(b_code)
-            code = ''.join(['%02X' % x for x in struct.unpack(fmt, b_code)])
-            codes.append(code)
-        return codes
-
-    def as_html(self, zone=None, errors=None):
-        if zone is None:
-            zone = ['two', 'three', 'four']
-        err_ch = errors if errors else ''
+    def panel_as_html_1B(self, define, err_ch):
         html = []
-        html.append('<!DOCTYPE html>')
-        html.append('<html>')
-        html.append('<head>')
-        html.append('<meta charset="UTF-8" />')
-        html.append('<title>%s</title>' % self.title)
-        html.append('<style type="text/css">')
-        html.append('table {border-collapse:collapse;border-spacing:0;}')
-        html.append('td {border:1px solid green;padding:0.3em;text-align:center;}')
-        html.append('hr {border:width:75%;}')
-        html.append('</style>')
-        html.append('</head>')
-        html.append('<body>')
-        html.append('<h1>%s</h1>' % self.title)
-        html.append('<p>Made by Yugang LIU</p>')
-        html.append('<hr />')
-        html.append('<h2>Description</h2>')
-        html.append('<p>%s</p>' % self.description)
-        html.append('<ul>')
-        html += ['<li>%s</li>' % item for item in self.detail]
-        html.append('</ul>')
-        html.append('<h2>Reference</h2>')
-        html.append('<ul>')
-        html.append('<li>wiki: <a href="%s" target="_blank">%s</a></li>' % (self.wiki, self.wiki))
-        html.append('</ul>')
-        html.append('<h2>Code Table</h2>')
-        if 'two' in zone:
-            html.append('<h3>Two Bytes Table</h3>')
-            html += self.as_html_2B(err_ch)
-        if 'three' in zone:
-            html.append('<h3>Three Bytes Table</h3>')
-            html += self.as_html_3B(err_ch)
-        if 'four' in zone:
-            html.append('<h3>Four Bytes Table</h3>')
-            html += self.as_html_4B(err_ch)
-        html.append('</body>')
-        html.append('</html>')
-        return '\n'.join(html)
+        m1, m2, n1, n2, x1, x2, y1, y2 = define['range']
+        x1, x2 = (y1 >> 4 & 0xf, y2 >> 4 & 0xf)
+        y1, y2 = (y1 & 0xf, y2 & 0xf)
+        html.append('<table>')
+        html.append(
+            '<tr>' +
+            '<td></td>' +
+            ''.join(['<td>%02X</td>' % y for y in range(y1, y2 + 1)]) +
+            '</tr>'
+        )
+        for x in range(x1, x2 + 1):
+            row = []
+            row.append('<td>%02X</td>' % x)
+            for y in range(y1, y2 + 1):
+                b_code = struct.pack('>B', x << 4 | y)
+                ch = b_code.decode(self.encoding, errors='ignore')
+                if not ch:
+                    ch = err_ch
+                name = self.get_category(b'\x00\x00\x00' + b_code)
+                if name:
+                    row.append('<td class="%s">%s</td>' % (name, ch))
+                else:
+                    row.append('<td>%s</td>' % ch)
+            html.append('<tr>' + ''.join(row) + '</tr>')
+        html.append('</table>')
+        return html
 
-    def as_html_2B(self, err_ch):
+    def panel_as_html_2B(self, define, err_ch):
         # two
         html = []
-        x1, x2, y1, y2 = self.define['two']
+        m1, m2, n1, n2, x1, x2, y1, y2 = define['range']
         html.append('<table>')
         html.append(
             '<tr>' +
@@ -116,15 +137,18 @@ class UTF8(object):
                 ch = b_code.decode(self.encoding, errors='ignore')
                 if not ch:
                     ch = err_ch
-                row.append('<td>%s</td>' % ch)
+                name = self.get_category(b'\x00\x00' + b_code)
+                if name:
+                    row.append('<td class="%s">%s</td>' % (name, ch))
+                else:
+                    row.append('<td>%s</td>' % ch)
             html.append('<tr>' + ''.join(row) + '</tr>')
         html.append('</table>')
         return html
 
-    def as_html_3B(self, err_ch):
-        # three
+    def panel_as_html_3B(self, define, err_ch):
         html = []
-        x1, x2, y1, y2, z1, z2 = self.define['three']
+        m1, m2, x1, x2, y1, y2, z1, z2 = define['range']
         for x in range(x1, x2 + 1):
             html.append('<h4>%02X table</h4>' % x)
             html.append('<table>')
@@ -142,15 +166,18 @@ class UTF8(object):
                     ch = b_code.decode(self.encoding, errors='ignore')
                     if not ch:
                         ch = err_ch
-                    row.append('<td>%s</td>' % ch)
+                    name = self.get_category(b'\x00' + b_code)
+                    if name:
+                        row.append('<td class="%s">%s</td>' % (name, ch))
+                    else:
+                        row.append('<td>%s</td>' % ch)
                 html.append('<tr>' + ''.join(row) + '</tr>')
             html.append('</table>')
         return html
 
-    def as_html_4B(self, err_ch):
-        # four
+    def panel_as_html_4B(self, define, err_ch):
         html = []
-        a1, a2, x1, x2, y1, y2, z1, z2 = self.define['four']
+        a1, a2, x1, x2, y1, y2, z1, z2 = define['range']
         for a in range(a1, a2 + 1):
             for x in range(x1, x2 + 1):
                 html.append('<h4>%02X %02X table</h4>' % (a, x))
@@ -169,7 +196,11 @@ class UTF8(object):
                         ch = b_code.decode(self.encoding, errors='ignore')
                         if not ch:
                             ch = err_ch
-                        row.append('<td>%s</td>' % ch)
+                        name = self.get_category(b_code)
+                        if name:
+                            row.append('<td class="%s">%s</td>' % (name, ch))
+                        else:
+                            row.append('<td>%s</td>' % ch)
                     html.append('<tr>' + ''.join(row) + '</tr>')
                 html.append('</table>')
         return html
@@ -178,7 +209,7 @@ class UTF8(object):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Output UTF-8 code table to HTML.')
-    parser.add_argument('--zone', help='UTF-8 encoding zone: two, three, four')
+    parser.add_argument('--panel', help='UTF-8 encoding panel: 1, 2, 3, 4')
     parser.add_argument('--code', dest='char', help='output UTF-8 code for character')
     parser.add_argument('--char', dest='code', help='output character for UTF-8 code')
     args = parser.parse_args()
@@ -196,7 +227,7 @@ if __name__ == '__main__':
             codes = args.code.split(',')
         print(''.join(utf8.chars(codes)))
     elif args.zone:
-        html = utf8.as_html(zone=args.zone)
+        html = utf8.as_html(panel=args.panel)
         print(html.encode('utf-8'))
     else:
         parser.print_help()

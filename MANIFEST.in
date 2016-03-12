@@ -1,0 +1,4 @@
+*.py
+README.rst
+test.sh
+MANIFEST.in

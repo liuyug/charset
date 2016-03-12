@@ -2,11 +2,5 @@
 CHARSET
 =======
 
-GB2312
-======
-Chinese GB2312 character
-https://zh.wikipedia.org/wiki/GB_2312
+Output Unicode, UTF-8, GB18030, GBK, GB2312 charset.
 
-ASCII
-=====
-ascii character
