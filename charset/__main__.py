@@ -19,13 +19,16 @@ CHARSET_CLASS = OrderedDict((
 
 def main():
     parser = argparse.ArgumentParser(
-        description='CHARSET v%s' % version,
         epilog='System encoding: %s' % sys.getfilesystemencoding(),
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s v' + version,
     )
     parser.add_argument(
         '--encoding',
         choices=CHARSET_CLASS.keys(),
-        required=True,
         help='Use charset',
     )
     parser.add_argument(
@@ -57,24 +60,27 @@ def main():
 
     in_encoding = out_encoding = sys.getfilesystemencoding()
 
-    charset = CHARSET_CLASS[args.encoding]()
+    if args.encoding:
+        charset = CHARSET_CLASS[args.encoding]()
+    else:
+        charset = None
 
-    if args.P:
+    if charset and args.P:
         for k, v in charset.define.items():
             p = k[5:]
             print('Panel %s: %s' % (p, ' - '.join(v['desc'])))
-    elif args.panel:
+    elif charset and args.panel:
         html = charset.as_html(panels=args.panel.split(','))
         if args.target:
             with open(args.target, 'w') as f:
                 f.write(html.encode('utf-8'))
         else:
             print(html.encode(out_encoding))
-    elif args.code:
+    elif charset and args.code:
         chars = args.target.decode(in_encoding)
         print('%s code:' % args.encoding.upper())
         print(charset.codes(chars))
-    elif args.char:
+    elif charset and args.char:
         if '-' in args.target:
             codes = args.target.split('-')
         elif ',' in args.target:
@@ -85,6 +91,7 @@ def main():
         print(''.join(charset.chars(codes)))
     else:
         parser.print_help()
+
 
 if __name__ == '__main__':
     main()
