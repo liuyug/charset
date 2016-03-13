@@ -101,7 +101,7 @@ class CharsetBase(object):
                 html.append('<tr>')
                 html.append('<td class="%s">%s</td>' % (
                     c['name'],
-                    '%s - %s' % (['desc'], c['name'].replace('_', ' ')),
+                    '%s - %s' % (c['desc'], c['name'].replace('_', ' ')),
                 ))
                 html.append('</tr>')
             html.append('</table>')
