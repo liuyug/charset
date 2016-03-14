@@ -5,4 +5,4 @@ from .gb18030 import GB18030
 from .gbk import GBK
 from .gb2312 import GB2312
 
-version = '0.1.4'
+version = '0.1.5'
