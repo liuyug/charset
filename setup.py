@@ -20,7 +20,6 @@ setup(
     entry_points={
         'console_scripts': [
             'charset = charset.__main__:main',
-            'ascii = ascii:txt',
         ],
     }
 )
